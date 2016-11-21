@@ -21,11 +21,7 @@ pub.create = function (event, _context, callback) {
     delete event.ResourceProperties.ServiceToken;
     var params = event.ResourceProperties;
 
-    if (event.ResourceProperties.Platform.indexOf('APNS') > -1) {
-        event.ResourceProperties.Attributes.PlatformCredential.split(" ").join("\n"); // eslint-disable-line quotes
-        event.ResourceProperties.Attributes.PlatformPrincipal.split(" ").join("\n"); // eslint-disable-line quotes
-    }
-
+    fixAPNSCredentialStrings(event.ResourceProperties.Platform, params);
     sns.createPlatformApplication(params, function (error, response) {
         if (error) {
             return callback(error);
@@ -43,6 +39,7 @@ pub.update = function (event, _context, callback) {
         PlatformApplicationArn: event.PhysicalResourceId,
         Attributes: event.ResourceProperties.Attributes
     };
+    fixAPNSCredentialStrings(event.ResourceProperties.Platform, params);
     sns.setPlatformApplicationAttributes(params, function (error) {
         return callback(error);
     });
@@ -62,3 +59,12 @@ pub.delete = function (event, _context, callback) {
 };
 
 module.exports = pub;
+
+function fixAPNSCredentialStrings(platform, params) {
+    if (platform.indexOf('APNS') > -1) {
+        params.Attributes.PlatformCredential.replace("-----BEGIN PRIVATE KEY----- ", "-----BEGIN PRIVATE KEY-----\n"); // eslint-disable-line quotes
+        params.Attributes.PlatformCredential.replace(" -----END PRIVATE KEY-----", "\n-----END PRIVATE KEY-----"); // eslint-disable-line quotes
+        params.Attributes.PlatformPrincipal.replace("-----BEGIN CERTIFICATE----- ", "-----BEGIN CERTIFICATE-----\n"); // eslint-disable-line quotes
+        params.Attributes.PlatformPrincipal.replace(" -----END CERTIFICATE-----", "\n-----END CERTIFICATE-----"); // eslint-disable-line quotes
+    }
+}
