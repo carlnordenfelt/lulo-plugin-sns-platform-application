@@ -110,9 +110,33 @@ describe('Index unit tests', function () {
     });
 
     describe('update', function () {
-        it('should do nothing', function (done) {
+        it('should succeed', function (done) {
             subject.update(event, {}, function (error) {
                 expect(error).to.equal(undefined);
+                expect(createPlatformApplicationStub.called).to.equal(false);
+                expect(deletePlatformApplicationStub.called).to.equal(false);
+                expect(setPlatformApplicationAttributesStub.calledOnce).to.equal(true);
+                done();
+            });
+        });
+        it('should succed with APNS platform', function (done) {
+            event.ResourceProperties.Platform = 'APNS';
+            event.ResourceProperties.Attributes = {
+                PlatformCredential: 'some text',
+                PlatformPrincipal: 'some text'
+            };
+            subject.update(event, {}, function (error) {
+                expect(error).to.equal(undefined);
+                expect(createPlatformApplicationStub.called).to.equal(false);
+                expect(deletePlatformApplicationStub.called).to.equal(false);
+                expect(setPlatformApplicationAttributesStub.calledOnce).to.equal(true);
+                done();
+            });
+        });
+        it('should fail on error', function (done) {
+            setPlatformApplicationAttributesStub.yields('setPlatformApplicationAttributes');
+            subject.update(event, {}, function (error) {
+                expect(error).to.equal('setPlatformApplicationAttributes');
                 expect(createPlatformApplicationStub.called).to.equal(false);
                 expect(deletePlatformApplicationStub.called).to.equal(false);
                 expect(setPlatformApplicationAttributesStub.calledOnce).to.equal(true);

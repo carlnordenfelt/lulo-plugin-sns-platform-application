@@ -21,7 +21,12 @@ pub.create = function (event, _context, callback) {
     delete event.ResourceProperties.ServiceToken;
     var params = event.ResourceProperties;
 
-    fixAPNSCredentialStrings(event.ResourceProperties.Platform, params);
+    if (params.Platform.indexOf('APNS') > -1) {
+        params.Attributes.PlatformCredential = fixCertPart(params.Attributes.PlatformCredential,
+            '-----BEGIN PRIVATE KEY-----', '-----END PRIVATE KEY-----');
+        params.Attributes.PlatformPrincipal = fixCertPart(params.Attributes.PlatformPrincipal,
+            '-----BEGIN CERTIFICATE-----', '-----END CERTIFICATE-----');
+    }
     sns.createPlatformApplication(params, function (error, response) {
         if (error) {
             return callback(error);
@@ -39,7 +44,13 @@ pub.update = function (event, _context, callback) {
         PlatformApplicationArn: event.PhysicalResourceId,
         Attributes: event.ResourceProperties.Attributes
     };
-    fixAPNSCredentialStrings(event.ResourceProperties.Platform, params);
+
+    if (event.ResourceProperties.Platform.indexOf('APNS') > -1) {
+        params.Attributes.PlatformCredential = fixCertPart(params.Attributes.PlatformCredential,
+            '-----BEGIN PRIVATE KEY-----', '-----END PRIVATE KEY-----');
+        params.Attributes.PlatformPrincipal = fixCertPart(params.Attributes.PlatformPrincipal,
+            '-----BEGIN CERTIFICATE-----', '-----END CERTIFICATE-----');
+    }
     sns.setPlatformApplicationAttributes(params, function (error) {
         return callback(error);
     });
@@ -60,11 +71,21 @@ pub.delete = function (event, _context, callback) {
 
 module.exports = pub;
 
-function fixAPNSCredentialStrings(platform, params) {
-    if (platform.indexOf('APNS') > -1) {
-        params.Attributes.PlatformCredential.replace("-----BEGIN PRIVATE KEY----- ", "-----BEGIN PRIVATE KEY-----\n"); // eslint-disable-line quotes
-        params.Attributes.PlatformCredential.replace(" -----END PRIVATE KEY-----", "\n-----END PRIVATE KEY-----"); // eslint-disable-line quotes
-        params.Attributes.PlatformPrincipal.replace("-----BEGIN CERTIFICATE----- ", "-----BEGIN CERTIFICATE-----\n"); // eslint-disable-line quotes
-        params.Attributes.PlatformPrincipal.replace(" -----END CERTIFICATE-----", "\n-----END CERTIFICATE-----"); // eslint-disable-line quotes
-    }
+function fixCertPart(certPart, header, footer) {
+    var fixedCertPart = certPart
+        // Remove headers and footers, we'll re-add them later
+        .replace(new RegExp(header, 'g'), 'CERT_HEADER_PLACEHOLDER')
+        .replace(new RegExp(footer, 'g'), 'CERT_FOOTER_PLACEHOLDER')
+
+        .replace(/\\n/g, '\n') // Replace escaped new line with proper new line
+        .replace(/ /g, '\n') // Replace space with new line
+
+        // Remove any extra newlines that have snuck in
+        .replace(/CERT_HEADER_PLACEHOLDER\n/g, 'CERT_HEADER_PLACEHOLDER')
+        .replace(/\nCERT_FOOTER_PLACEHOLDER/g, 'CERT_FOOTER_PLACEHOLDER')
+
+        .replace(/CERT_HEADER_PLACEHOLDER/g, header + '\n') // Replace headers and footers
+        .replace(/CERT_FOOTER_PLACEHOLDER/g, '\n' + footer);
+
+    return fixedCertPart;
 }

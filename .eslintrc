@@ -29,7 +29,7 @@
         "consistent-return": 0,
         "curly": 1,
         "default-case": 2,
-        "dot-location": 1,
+        "dot-location": ["error", "property"],
         "dot-notation": 1,
         "guard-for-in": 2,
         "no-caller": 2,
