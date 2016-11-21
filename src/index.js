@@ -20,6 +20,12 @@ pub.validate = function (event) {
 pub.create = function (event, _context, callback) {
     delete event.ResourceProperties.ServiceToken;
     var params = event.ResourceProperties;
+
+    if (event.ResourceProperties.Platform.indexOf('APNS') > -1) {
+        event.ResourceProperties.Attributes.PlatformCredential.split(" ").join("\n"); // eslint-disable-line quotes
+        event.ResourceProperties.Attributes.PlatformPrincipal.split(" ").join("\n"); // eslint-disable-line quotes
+    }
+
     sns.createPlatformApplication(params, function (error, response) {
         if (error) {
             return callback(error);

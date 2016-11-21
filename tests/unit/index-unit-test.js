@@ -82,6 +82,11 @@ describe('Index unit tests', function () {
 
     describe('create', function () {
         it('should succeed', function (done) {
+            event.ResourceProperties.Platform = 'APNS_SANDBOX';
+            event.ResourceProperties.Attributes = {
+                PlatformCredential: 'some text',
+                PlatformPrincipal: 'some text'
+            };
             subject.create(event, {}, function (error, response) {
                 expect(error).to.equal(null);
                 expect(createPlatformApplicationStub.calledOnce).to.equal(true);
