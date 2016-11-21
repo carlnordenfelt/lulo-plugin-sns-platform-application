@@ -6,7 +6,7 @@ lulo SNS Platform Application is a [lulo](https://github.com/carlnordenfelt/lulo
 
 # Installation
 ```
-$ npm install lulo-plugin-sns-pltform-application --save
+$ npm install lulo-plugin-sns-platform-application --save
 ```
 
 **NOTE:**
