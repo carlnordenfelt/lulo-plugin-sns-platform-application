@@ -27,7 +27,7 @@ The Custom Resource Lambda requires the following permissions for this plugin to
 {
    "Effect": "Allow",
    "Action": [
-       "sns:CreatePlatformApplication"
+       "sns:CreatePlatformApplication",
        "sns:DeletePlatformApplication",
        "sns:SetPlatformApplicationAttributes"
    ],
