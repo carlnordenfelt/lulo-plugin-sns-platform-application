@@ -39,12 +39,17 @@ pub.create = function (event, _context, callback) {
     });
 };
 
-pub.update = function (event, _context, callback) {
+pub.update = function (event, context, callback) {
+    // Check if this change requires replacement
+    if (requiresReplacement(event)) {
+        return replace(event, context, callback);
+    }
+
+    // No replacement, just update existing platform
     var params = {
         PlatformApplicationArn: event.PhysicalResourceId,
         Attributes: event.ResourceProperties.Attributes
     };
-
     if (event.ResourceProperties.Platform.indexOf('APNS') > -1) {
         params.Attributes.PlatformCredential = fixCertPart(params.Attributes.PlatformCredential,
             '-----BEGIN PRIVATE KEY-----', '-----END PRIVATE KEY-----');
@@ -88,4 +93,23 @@ function fixCertPart(certPart, header, footer) {
         .replace(/CERT_FOOTER_PLACEHOLDER/g, '\n' + footer);
 
     return fixedCertPart;
+}
+
+function requiresReplacement(event) {
+    return event.ResourceProperties.Name !== event.OldResourceProperties.Name
+        || event.ResourceProperties.Platform !== event.OldResourceProperties.Platform;
+}
+
+function replace(event, context, callback) {
+    pub.create(event, context, function (error, data) {
+        if (error) {
+            return callback(error);
+        }
+        pub.delete(event, context, function (error) {
+            if (error) {
+                return callback(error);
+            }
+            return callback(null, data);
+        });
+    });
 }

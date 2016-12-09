@@ -14,7 +14,9 @@ This resource only supports updates of the Attributes property! Other changes ar
 
 ## Usage
 ### Properties
-See the [AWS SDK Documentation for SNS::createPlatformApplication](http://docs.aws.amazon.com/AWSJavaScriptSDK/latest/AWS/SNS.html#createPlatformApplication-property)
+* Name: Name of the application. Update requires replacement. Change with care as existing Endpoints are also deleted.
+* Platform: Application platform. Update requires replacement. Note, if you change the platform you must also change the Name.
+* Attributes: See the [AWS SDK Documentation for SNS::createPlatformApplication](http://docs.aws.amazon.com/AWSJavaScriptSDK/latest/AWS/SNS.html#createPlatformApplication-property)
 
 ### Return Values
 When the logical ID of this resource is provided to the Ref intrinsic function, Ref returns the Arn of the Platform Application.

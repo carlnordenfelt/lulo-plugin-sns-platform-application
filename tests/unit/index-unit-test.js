@@ -110,8 +110,14 @@ describe('Index unit tests', function () {
     });
 
     describe('update', function () {
+        var updateEvent;
+        beforeEach(function () {
+            updateEvent = JSON.parse(JSON.stringify(event));
+            updateEvent.OldResourceProperties = JSON.parse(JSON.stringify(updateEvent.ResourceProperties));
+            updateEvent.PhysicalResourceId = 'arn:aws:sns:eu-west-1:1234567890:app/test/test';
+        });
         it('should succeed', function (done) {
-            subject.update(event, {}, function (error) {
+            subject.update(updateEvent, {}, function (error) {
                 expect(error).to.equal(undefined);
                 expect(createPlatformApplicationStub.called).to.equal(false);
                 expect(deletePlatformApplicationStub.called).to.equal(false);
@@ -119,13 +125,14 @@ describe('Index unit tests', function () {
                 done();
             });
         });
-        it('should succed with APNS platform', function (done) {
-            event.ResourceProperties.Platform = 'APNS';
-            event.ResourceProperties.Attributes = {
+        it('should succeed with APNS platform', function (done) {
+            updateEvent.ResourceProperties.Platform = 'APNS';
+            updateEvent.OldResourceProperties.Platform = 'APNS';
+            updateEvent.ResourceProperties.Attributes = {
                 PlatformCredential: 'some text',
                 PlatformPrincipal: 'some text'
             };
-            subject.update(event, {}, function (error) {
+            subject.update(updateEvent, {}, function (error) {
                 expect(error).to.equal(undefined);
                 expect(createPlatformApplicationStub.called).to.equal(false);
                 expect(deletePlatformApplicationStub.called).to.equal(false);
@@ -135,11 +142,44 @@ describe('Index unit tests', function () {
         });
         it('should fail on error', function (done) {
             setPlatformApplicationAttributesStub.yields('setPlatformApplicationAttributes');
-            subject.update(event, {}, function (error) {
+            subject.update(updateEvent, {}, function (error) {
                 expect(error).to.equal('setPlatformApplicationAttributes');
                 expect(createPlatformApplicationStub.called).to.equal(false);
                 expect(deletePlatformApplicationStub.called).to.equal(false);
                 expect(setPlatformApplicationAttributesStub.calledOnce).to.equal(true);
+                done();
+            });
+        });
+
+        it('should succeed with replace', function (done) {
+            updateEvent.ResourceProperties.Name = 'NewName';
+            subject.update(updateEvent, {}, function (error) {
+                expect(error).to.equal(null);
+                expect(createPlatformApplicationStub.calledOnce).to.equal(true);
+                expect(deletePlatformApplicationStub.calledOnce).to.equal(true);
+                expect(setPlatformApplicationAttributesStub.called).to.equal(false);
+                done();
+            });
+        });
+        it('should fail on replace with create error', function (done) {
+            updateEvent.ResourceProperties.Name = 'NewName';
+            createPlatformApplicationStub.yields('createPlatformApplication');
+            subject.update(updateEvent, {}, function (error) {
+                expect(error).to.equal('createPlatformApplication');
+                expect(createPlatformApplicationStub.calledOnce).to.equal(true);
+                expect(deletePlatformApplicationStub.called).to.equal(false);
+                expect(setPlatformApplicationAttributesStub.called).to.equal(false);
+                done();
+            });
+        });
+        it('should fail on replace with delete error', function (done) {
+            updateEvent.ResourceProperties.Platform = 'NewPlatform';
+            deletePlatformApplicationStub.yields('deletePlatformApplication');
+            subject.update(updateEvent, {}, function (error) {
+                expect(error).to.equal('deletePlatformApplication');
+                expect(createPlatformApplicationStub.calledOnce).to.equal(true);
+                expect(deletePlatformApplicationStub.calledOnce).to.equal(true);
+                expect(setPlatformApplicationAttributesStub.called).to.equal(false);
                 done();
             });
         });
