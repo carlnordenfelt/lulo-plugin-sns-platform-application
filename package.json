@@ -29,7 +29,7 @@
   },
   "homepage": "https://github.com/carlnordenfelt/lulo-plugin-sns-platform-application",
   "dependencies": {
-    "aws-sdk": "2.7.4"
+    "aws-sdk": "2.7.26"
   },
   "devDependencies": {
     "chai": "3.5.0",
